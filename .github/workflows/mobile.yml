@@ -1,0 +1,75 @@
+name: Ứng dụng điện thoại
+
+on:
+  push:
+    branches: [main]
+    paths: ['mobile/**', 'src/core.js', 'src/report.js', 'src/developer.js', 'src/logo-itd.png', 'package.json', 'package-lock.json', 'capacitor.config.json', '.github/workflows/mobile.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: mobile
+  cancel-in-progress: false
+
+jobs:
+  web:
+    name: Trang web cài trên iPhone, Android
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vite build --config mobile/vite.config.js
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: mobile/dist
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+  apk:
+    name: Tệp .apk cho Android (chưa ký)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npx vite build --config mobile/vite.config.js
+      - run: npx cap sync android
+      - name: Build APK
+        working-directory: mobile/android
+        env:
+          APK_VERSION_CODE: ${{ github.run_number }}
+        run: |
+          export APK_VERSION_NAME="$(node -p "require('../../package.json').version").${{ github.run_number }}"
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+          cp app/build/outputs/apk/release/app-release-unsigned.apk ../../SoDuAn-unsigned.apk
+      # APK được ký bằng khóa cố định giữ riêng ngoài kho mã (không đưa khóa lên GitHub).
+      - name: Đăng bản chưa ký lên bản phát hành "mobile"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! gh release view mobile >/dev/null 2>&1; then
+            gh release create mobile --target "$GITHUB_SHA" --prerelease --title "Sổ Dự Án trên điện thoại" --notes "Bản dựng tự động của ứng dụng điện thoại."
+          fi
+          gh release upload mobile SoDuAn-unsigned.apk --clobber

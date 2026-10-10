@@ -1,0 +1,6 @@
+{
+  "appId": "vn.itd.sodaan",
+  "appName": "Sổ Dự Án",
+  "webDir": "mobile/dist",
+  "android": { "path": "mobile/android" }
+}

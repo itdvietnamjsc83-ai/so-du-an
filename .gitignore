@@ -5,3 +5,6 @@ src-tauri/gen/
 *.sdakey-master
 master-key*.json
 .DS_Store
+mobile/dist/
+SoDuAn*.apk
+*.jks
