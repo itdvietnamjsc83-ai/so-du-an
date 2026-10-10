@@ -506,7 +506,7 @@ function impPreview(imp) {
 /* ---------- Quản lý key ---------- */
 V.keys = () => {
   const l = S.lic; const rev = new Set(S.revoked.map(r => r.serial));
-  return `<div class="head"><div><h1>Quản lý key</h1><p class="sub">Cấp key cho Trưởng nhóm và Nhân viên. Mỗi key dùng trên một máy; thu hồi khi nghỉ việc hoặc đổi máy.</p></div>${l.can_issue ? '<button class="btn pri" data-act="key-new">+ Cấp key</button>' : ''}</div>
+  return `<div class="head"><div><h1>Quản lý key</h1><p class="sub">Cấp key cho Trưởng nhóm và Nhân viên. Mỗi key dùng trên một máy; thu hồi khi nghỉ việc hoặc đổi máy.</p></div><div class="row"><button class="btn" data-act="g-prov">Nhà cung cấp: cấp key Giám đốc</button>${l.can_issue ? '<button class="btn pri" data-act="key-new">+ Cấp key</button>' : ''}</div></div>
   <div class="kv"><div><span>Key của máy này</span><b>${ROLE_NAME[l.role]}</b></div><div><span>Hạn dùng</span><b>${d(l.exp)}</b></div><div><span>Đã cấp</span><b>${S.keys.length} key</b></div><div><span>Đã thu hồi</span><b>${S.keys.filter(k => rev.has(k.serial)).length} key</b></div></div>
   <section class="panel tbl-wrap"><table><thead><tr><th>Người dùng</th><th>Vai trò</th><th>Mã key</th><th>Máy</th><th>Ngày cấp</th><th>Hạn</th><th>Trạng thái</th><th></th></tr></thead><tbody>
   ${[...S.keys].sort((a, b) => b.ngay.localeCompare(a.ngay)).map(k => { const r = rev.has(k.serial); return `<tr><td><b>${esc(k.ten)}</b><div class="muted">Cấp bởi ${esc(k.cap)}</div></td><td>${ROLE_NAME[k.role]}</td><td class="num">${esc(k.serial)}</td><td class="num">${esc(k.may || 'Máy bất kỳ (gắn khi kích hoạt)')}</td><td class="date">${d(k.ngay)}</td><td class="date">${d(k.exp)}</td>

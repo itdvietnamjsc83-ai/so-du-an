@@ -335,7 +335,7 @@ A.copy = async el => { const t = document.getElementById(el.dataset.src); try { 
 A.lic = () => { const l = S.lic;
   modal('Thông tin kích hoạt', `<div class="calc"><span>Người dùng</span><b>${esc(l.name)}</b><span>Vai trò</span><b>${ROLE_NAME[l.role]}</b><span>Mã key</span><span class="num">${esc(l.serial)}</span><span>Mã máy</span><span class="num" id="mcode">${esc(l.machine)}</span><span>Hạn dùng</span><span class="date">${d(l.exp)}</span></div>
     <div class="note">Đổi vai trò hoặc gia hạn: nhập key mới do Giám đốc (hoặc nhà cung cấp) cấp. Dữ liệu trên máy giữ nguyên.</div>`,
-    `<button class="btn" data-act="copy" data-src="mcode">Sao chép mã máy</button><button class="btn" data-act="lic-new">Nhập key mới</button><button class="btn pri" data-close="1">Đóng</button>`); };
+    `<button class="btn" data-act="g-prov" style="margin-right:auto">Nhà cung cấp: cấp key Giám đốc</button><button class="btn" data-act="copy" data-src="mcode">Sao chép mã máy</button><button class="btn" data-act="lic-new">Nhập key mới</button><button class="btn pri" data-close="1">Đóng</button>`); };
 A['lic-new'] = () => formModal({ title: 'Nhập key mới', fields: [{ k: 'name', label: 'Họ tên', req: 1, value: S.lic.name }, { k: 'key', label: 'Key', type: 'textarea', req: 1, rows: 5 }], ok: 'Kích hoạt',
   onSave: async v => { try { S.lic = await api('license_activate', { name: v.name, key: v.key }); toast('Đã kích hoạt vai trò ' + ROLE_NAME[S.lic.role]); rerender(); } catch (e) { return String(e); } } });
 
