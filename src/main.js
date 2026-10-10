@@ -12,6 +12,7 @@ import { toast, closeModal, runConfirm, submitForm, formDelete, pickInto, clearF
 import { V, renderSide, renderCrumbs, renderLic } from './views.js';
 import { A, calcNT, providerModal } from './actions.js';
 import './excelin.js';
+import { DEV } from './developer.js';
 import * as BB from './bienban.js';
 import { start as startNotify } from './notify.js';
 
@@ -42,6 +43,24 @@ async function loadLog() {
   el.innerHTML = `<table><thead><tr><th>Thời điểm</th><th>Người</th><th>Thao tác</th><th>Mục</th><th>Nội dung</th></tr></thead><tbody>${rows.map(r => `<tr><td class="date">${esc(r.ts.replace('T', ' ').slice(0, 16))}</td><td>${esc(r.user)} <span class="muted">${esc(ROLE_NAME[r.role] || '')}</span></td><td>${AC[r.action] || esc(r.action)}</td><td>${CN[r.coll] || esc(r.coll)}</td><td>${esc(r.label)}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">Chưa có thay đổi.</td></tr>'}</tbody></table>`;
 }
 const go = v => { S.view = v; closeModal(); render(); };
+
+/* ---------- màn hình chào: thông tin nhà phát triển ---------- */
+function welcome() {
+  const d = DEV, ln = (k, v) => v ? `<div class="wl-row"><span class="muted">${k}</span><span>${esc(v)}</span></div>` : '';
+  return new Promise(res => {
+    $('#app').hidden = true;
+    $('#gate').innerHTML = `<div class="gate"><div class="act-card welcome">
+      ${d.logo ? `<img class="wl-logo" src="${d.logo}" alt="">` : '<div class="brand-mark" style="width:44px;height:44px;font-size:20px">S</div>'}
+      <h1>Sổ Dự Án <span class="muted" style="font-size:13px;font-weight:400">phiên bản ${esc(S.info?.version || '')}</span></h1>
+      ${d.ten ? `<div class="wl-dev"><div class="muted" style="font-size:12px">Phát triển bởi</div><div class="wl-name">${esc(d.ten)}</div></div>` : ''}
+      ${d.gioiThieu ? `<p>${esc(d.gioiThieu)}</p>` : ''}
+      <div class="wl-info">${ln('Địa chỉ', d.diaChi)}${ln('Điện thoại', d.dienThoai)}${ln('Email', d.email)}${ln('Website', d.website)}${ln('Mã số thuế', d.mst)}</div>
+      <button class="btn pri" id="wl-go" style="width:100%;justify-content:center">Bắt đầu sử dụng</button>
+      ${d.banQuyen ? `<div class="muted" style="font-size:12px;text-align:center">${esc(d.banQuyen)}</div>` : ''}</div></div>`;
+    const b = $('#wl-go'); b.focus();
+    b.onclick = () => { $('#gate').innerHTML = ''; res(); };
+  });
+}
 
 /* ---------- kích hoạt ---------- */
 function gate(msg = '') {
@@ -181,6 +200,7 @@ let day = today(); setInterval(() => { if (today() !== day) { day = today(); ren
 (async () => {
   try {
     S.info = await api('app_info'); S.lic = S.info.license;
+    await welcome();
     if (S.lic.activated) await enter(); else gate();
   } catch (e) { document.body.innerHTML = `<pre style="padding:20px;white-space:pre-wrap">Không khởi động được: ${esc(String(e))}</pre>`; }
 })();

@@ -369,3 +369,9 @@ button.drop{width:100%;font:inherit;color:inherit;cursor:pointer}
 .gate .mcode{font-family:var(--font-num);font-size:20px;letter-spacing:.06em;font-weight:600}
 .gate .err{color:var(--bad);font-size:13px}
 td.num{white-space:nowrap}
+.welcome{text-align:left}
+.welcome .wl-logo{max-width:160px;max-height:80px;object-fit:contain;align-self:flex-start}
+.welcome .wl-name{font-size:17px;font-weight:600}
+.welcome .wl-info{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.welcome .wl-info:empty{display:none}
+.welcome .wl-row{display:grid;grid-template-columns:90px 1fr;gap:8px}
