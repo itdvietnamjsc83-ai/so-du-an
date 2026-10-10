@@ -106,7 +106,7 @@ function cvModal(id) {
   const edit = can('themCV', g.da);
   const notes = (c.notes || []).slice().reverse();
   modal(c.ten, `<div class="note">${esc(a.ten || '')} · ${esc(g.ma)} · ${esc(g.ten)}</div>
-    <div class="calc"><span>Người phụ trách</span><b>${esc(c.nguoi || '—')}</b><span>Hạn gốc</span><span class="date">${d(c.goc)}</span><span>Hạn hiện hành</span><span class="date">${d(c.hh)}${c.pb ? ` · đã điều chỉnh ${c.pb} lần` : ''}</span><span>Trạng thái</span><span>${pill(c.tt)}${c.xong ? ' ngày ' + d(c.xong) : ''}</span></div>
+    <div class="calc"><span>Người phụ trách</span><b>${esc(c.nguoi || '—')}</b>${c.nhom ? `<span>Hạng mục</span><span>${esc(c.nhom)}</span>` : ''}${c.bd ? `<span>Bắt đầu</span><span class="date">${d(c.bd)}</span>` : ''}<span>Hạn gốc</span><span class="date">${d(c.goc)}</span><span>Hạn hiện hành</span><span class="date">${d(c.hh)}${c.pb ? ` · đã điều chỉnh ${c.pb} lần` : ''}</span><span>Trạng thái</span><span>${pill(c.tt)}${c.xong ? ' ngày ' + d(c.xong) : ''}</span></div>
     ${edit ? `<div class="grid-f"><div class="field"><label for="cv-ten">Tên công việc</label><input id="cv-ten" value="${esc(c.ten)}"></div><div class="field"><label for="cv-nguoi">Người phụ trách</label><input id="cv-nguoi" list="cv-ng-dl" value="${esc(c.nguoi)}"><datalist id="cv-ng-dl">${staff().map(p => `<option value="${esc(p)}">`).join('')}</datalist></div>
       ${c.tt !== 'Hoàn thành' ? `<div class="field"><label for="cv-tt">Trạng thái</label><select id="cv-tt">${['Chưa làm', 'Đang làm'].map(x => `<option ${x === c.tt ? 'selected' : ''}>${x}</option>`).join('')}</select></div>` : ''}</div>` : ''}
     <div class="bbsec"><h3>Ghi chú, ảnh hiện trường</h3>

@@ -11,6 +11,7 @@ import { S, $, api, esc, load, kvSet, can, ROLE_NAME, gtById, today } from './co
 import { toast, closeModal, runConfirm, submitForm, formDelete, pickInto, clearFile, moneyInput } from './ui.js';
 import { V, renderSide, renderCrumbs, renderLic } from './views.js';
 import { A, calcNT, providerModal } from './actions.js';
+import './excelin.js';
 import * as BB from './bienban.js';
 import { start as startNotify } from './notify.js';
 

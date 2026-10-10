@@ -38,6 +38,15 @@ jobs:
       - run: npm ci
       - name: Kiểm tra lõi Rust
         run: cargo test --manifest-path src-tauri/Cargo.toml --lib
+      - name: Xóa bộ cài cũ cùng phiên bản trên bản phát hành (để thay bằng bản mới)
+        if: github.event_name == 'push'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          v=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          if [ "${{ matrix.name }}" = windows ]; then pat='[.]exe$'; else pat='[.](dmg|tar[.]gz|sig)$'; fi
+          gh release view "v$v" --json assets --jq '.assets[].name' 2>/dev/null | grep -E "$pat" | while read -r f; do gh release delete-asset "v$v" "$f" -y; done || true
       - name: Build
         uses: tauri-apps/tauri-action@v0
         env:
