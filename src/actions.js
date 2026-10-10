@@ -241,7 +241,16 @@ A['dv-edit'] = () => { const dv = donVi();
 /* ---------- Tệp ---------- */
 A.openfile = async el => { try { await openPath(await api('file_path', { rel: el.dataset.f })); } catch (e) { toast('Không mở được tệp: ' + e); } };
 A.opendir = async () => { try { await openPath(S.info.dir); } catch (e) { toast(String(e)); } };
-A.backup = async () => { try { const p = await api('backup_now'); toast('Đã sao lưu: ' + p.split(/[\\/]/).pop()); } catch (e) { toast('Lỗi sao lưu: ' + e); } };
+A.backup = async () => {
+  const dest = await saveDlg({ defaultPath: `SoDuAn_SaoLuu_${today()}.sdabak`, filters: [{ name: 'Bản sao lưu Sổ Dự Án', extensions: ['sdabak'] }] }); if (!dest) return;
+  try { const n = await api('backup_save', { dest: String(dest) }); await kvSet('lastBackup', fmtNow()); toast(`Đã lưu bản sao lưu (${n} tệp đính kèm): ` + String(dest).split(/[\\/]/).pop()); rerender(); }
+  catch (e) { toast('Lỗi sao lưu: ' + e); } };
+A.restore = async () => {
+  const p = await openDlg({ multiple: false, filters: [{ name: 'Bản sao lưu Sổ Dự Án', extensions: ['sdabak'] }] }); if (!p) return;
+  let i; try { i = await api('backup_info', { path: String(p) }); } catch (e) { toast(String(e)); return; }
+  confirmBox('Khôi phục từ bản sao lưu?', `Tệp <b>${esc(String(p).split(/[\\/]/).pop())}</b><br>Sao lưu lúc ${esc(new Date(i.at).toLocaleString('vi-VN'))} bởi ${esc(i.by)} · ${i.projects} dự án · ${i.files} tệp đính kèm.<br><br>
+    Toàn bộ dữ liệu hiện tại trên máy này sẽ được <b>thay bằng bản sao lưu</b>. Phần mềm tự giữ một bản của dữ liệu hiện tại trong thư mục backups trước khi thay. Key kích hoạt của máy này giữ nguyên.`,
+    'Khôi phục', async () => { try { await api('backup_restore', { path: String(p) }); toast('Đã khôi phục dữ liệu từ bản sao lưu'); window.dispatchEvent(new Event('sda-reload')); } catch (e) { toast(String(e)); } }); };
 
 /* ---------- Báo cáo ---------- */
 A['rp-export'] = async () => {

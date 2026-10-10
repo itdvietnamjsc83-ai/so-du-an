@@ -1,3 +1,4 @@
+pub mod backup;
 pub mod db;
 pub mod license;
 pub mod sync;
@@ -156,6 +157,23 @@ fn backup(dir: &std::path::Path, c: &rusqlite::Connection) -> R<String> {
 fn backup_now(st: State<AppState>) -> R<String> { backup(&st.dir, &st.conn.lock().unwrap()) }
 
 #[tauri::command]
+fn backup_save(st: State<AppState>, dest: String) -> R<usize> {
+    let c = st.conn.lock().unwrap();
+    let (name, _) = who(&c);
+    backup::save(&c, &st.dir, std::path::Path::new(&dest), &name)
+}
+
+#[tauri::command]
+fn backup_info(path: String) -> R<backup::Info> { backup::info(std::path::Path::new(&path)) }
+
+#[tauri::command]
+fn backup_restore(st: State<AppState>, path: String) -> R<()> {
+    let mut c = st.conn.lock().unwrap();
+    backup(&st.dir, &c)?;
+    backup::restore(&mut c, &st.dir, std::path::Path::new(&path))
+}
+
+#[tauri::command]
 fn save_file(path: String, bytes: Vec<u8>) -> R<()> { std::fs::write(path, bytes).map_err(e) }
 
 #[tauri::command]
@@ -255,7 +273,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             app_info, db_load, db_apply, kv_set, changelog,
             license_activate, license_issue, license_issue_director, license_check,
-            sync_export, sync_preview, sync_apply, backup_now,
+            sync_export, sync_preview, sync_apply, backup_now, backup_save, backup_info, backup_restore,
             save_file, read_file, file_store, file_read, file_path,
             send_telegram, send_email, set_tray, quit
         ])

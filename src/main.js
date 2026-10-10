@@ -19,7 +19,7 @@ const ACTPERM = {
   'da-new': 'taoDA', 'da-edit': 'suaDA', 'gt-new': 'suaGT', 'gt-edit': 'suaGT', quet: 'themCV', 'quet-ok': 'themCV', 'cv-new': 'themCV', 'cv-save': 'themCV', 'cv-del': 'themCV', 'cv-note': 'ghiChu',
   done: 'done', 'done-ok': 'done', undo: 'done', dcsave: 'dcHan', 'tu-new': 'ghiTC', 'tu-edit': 'suaTC', 'nt-new': 'ghiTC', 'nt-edit': 'suaTC', 'tt-new': 'ghiTC', 'tt-edit': 'suaTC',
   'bh-edit': 'baoHanh', 'qt-edit': 'lapQT', 'qt-chot': 'chotQT', 'qt-mo': 'chotQT', 'ntc-new': 'nhaThau', 'ntc-edit': 'nhaThau', 'db-new': 'nhaThau', 'db-edit': 'nhaThau',
-  'tv-new': 'thuVien', 'tv-edit': 'thuVien', 'dv-edit': 'caiDat', 'key-new': 'key', 'key-rev': 'key', 'sync-export': 'xuat', takeover: 'chonBan', backup: 'saoLuu', 'tc-xlsx': 'bcTC',
+  'tv-new': 'thuVien', 'tv-edit': 'thuVien', 'dv-edit': 'caiDat', 'key-new': 'key', 'key-rev': 'key', 'sync-export': 'xuat', takeover: 'chonBan', backup: 'saoLuu', restore: 'saoLuu', 'tc-xlsx': 'bcTC',
   'bb-new': 'taoBB', 'bb-tpl': 'qlMau', 'bb-imp': 'qlMau', 'bb-menu': 'qlMau', 'bb-ren': 'qlMau', 'bb-del': 'qlMau', 'bb-restore': 'qlMau', 'bb-nhom': 'qlMau',
 };
 const ctxDA = () => (S.view === 'goithau' ? gtById(S.gtSel)?.da : S.view === 'duandetail' ? S.duAn : undefined);
