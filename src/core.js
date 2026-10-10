@@ -85,9 +85,9 @@ export function tc(gid) {
 
 /* ---------- phân quyền (bảng đã chốt 10/10/2026: [Giám đốc, Trưởng nhóm, Nhân viên]) ---------- */
 export const PERM = {
-  taoDA: [1, 1, 0], suaDA: [1, 1, 0], xoaDA: [1, 0, 0], dongDA: [1, 1, 0], suaGT: [1, 1, 0], xoaGT: [1, 0, 0], nhaThau: [1, 1, 0],
+  taoDA: [1, 1, 0], suaDA: [1, 1, 0], xoaDA: [1, 1, 0], dongDA: [1, 1, 0], suaGT: [1, 1, 0], xoaGT: [1, 1, 0], nhaThau: [1, 1, 0],
   themCV: [1, 1, 0], done: [1, 1, 0], dcHan: [1, 1, 0], ghiChu: [1, 1, 1], thuVien: [1, 1, 0],
-  xemTC: [1, 1, 1], ghiTC: [1, 1, 1], suaTC: [1, 0, 0], baoHanh: [1, 1, 1], lapQT: [1, 1, 1], chotQT: [1, 0, 0],
+  xemTC: [1, 1, 1], ghiTC: [1, 1, 1], suaTC: [1, 1, 0], baoHanh: [1, 1, 1], lapQT: [1, 1, 1], chotQT: [1, 1, 0],
   bcTD: [1, 1, 1], bcTC: [1, 1, 0], luuBC: [1, 1, 1], taoBB: [1, 1, 1], qlMau: [1, 1, 0], nhan: [1, 1, 1], quyTac: [1, 1, 1],
   xuat: [1, 1, 0], nhapXem: [1, 1, 1], nhapGop: [1, 1, 0], chonBan: [1, 1, 0], key: [1, 0, 0], nhatKy: [1, 1, 0], saoLuu: [1, 1, 0], caiDat: [1, 1, 0],
 };

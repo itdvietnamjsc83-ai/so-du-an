@@ -298,7 +298,7 @@ T.taichinh = g => {
   ${S.thanhToan.filter(p => rows.some(r => r.id === p.nt)).sort((a, b) => a.ngay.localeCompare(b.ngay)).map(p => `<tr><td class="date">${d(p.ngay)}</td><td>Đợt ${rows.find(r => r.id === p.nt).dot}</td><td class="r num">${vnd(p.tien)}</td><td>${esc(p.ct)} ${fileBtn(p.tep)}</td><td>${fix ? `<button class="btn sm" data-act="tt-edit" data-id="${p.id}">Sửa</button>` : ''}</td></tr>`).join('')}
   </tbody></table></div></section>` : ''}
   <div class="kv"><div><span>Còn lại của hợp đồng</span><b>${vnd(t.conLaiHD)}</b></div><div><span>Tổng đã chi (tạm ứng + thanh toán)</span><b>${vnd(t.tu + t.daTT)}</b></div><div><span>Tiền giữ bảo hành</span><b>${vnd(t.giu)}</b></div><div><span>Công nợ</span><b>${vnd(t.congNo)}</b></div></div>
-  ${w && !fix ? '<p class="muted">Bạn ghi thêm được các khoản mới. Sửa hoặc xóa khoản đã ghi cần Giám đốc.</p>' : ''}`;
+  ${w && !fix ? '<p class="muted">Bạn ghi thêm được các khoản mới. Sửa hoặc xóa khoản đã ghi cần Giám đốc hoặc Trưởng nhóm.</p>' : ''}`;
 };
 T.baohanh = g => {
   const b = g.bh || { ht: 'Không có' }; const t = tc(g.id); const ok = can('baoHanh', g.da);
@@ -321,7 +321,7 @@ T.quyettoan = g => {
     ${q?.tep ? `<div>${fileBtn(q.tep, 'Mở hồ sơ quyết toán')}</div>` : ''}
     <div class="row" style="justify-content:flex-end">${lap ? `<button class="btn ${q ? '' : 'pri'}" data-act="qt-edit">${q ? 'Sửa quyết toán' : 'Lập quyết toán'}</button>` : ''}${chot && q && !q.chot ? `<button class="btn pri" data-act="qt-chot">Chốt quyết toán</button>` : ''}${chot && q?.chot ? `<button class="btn" data-act="qt-mo">Mở lại để sửa</button>` : ''}</div>
   </div></section>
-  <p class="muted">Giá trị hợp đồng ${vnd(g.gt)} · đã nghiệm thu ${vnd(t.daNT)}. Tiền giữ bảo hành trả khi hết thời gian bảo hành (${d(g.bh?.hhBH)}). ${q && !q.chot ? 'Quyết toán đang lập, Giám đốc chốt để khóa số liệu.' : ''}</p>`;
+  <p class="muted">Giá trị hợp đồng ${vnd(g.gt)} · đã nghiệm thu ${vnd(t.daNT)}. Tiền giữ bảo hành trả khi hết thời gian bảo hành (${d(g.bh?.hhBH)}). ${q && !q.chot ? 'Quyết toán đang lập, Giám đốc hoặc Trưởng nhóm chốt để khóa số liệu.' : ''}</p>`;
 };
 T.bangiao = g => {
   const ls = S.banGiao.filter(x => x.gt === g.id).sort((a, b) => b.ngay.localeCompare(a.ngay)); const ok = can('themCV', g.da) || can('ghiTC', g.da);

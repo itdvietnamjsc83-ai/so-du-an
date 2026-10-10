@@ -197,7 +197,7 @@ A['qt-edit'] = () => { const g = g0(); const t = tc(g.id); const q = g.qt || {};
     { k: 'gt', label: 'Giá trị quyết toán (đ)', type: 'money', req: 1, value: q.gt ?? t.daNT, half: 1 }, { k: 'ngay', label: 'Ngày phê duyệt quyết toán', type: 'date', value: q.ngay, half: 1 },
     { k: 'tep', label: 'Hồ sơ quyết toán', type: 'file', value: q.tep }],
     onSave: async v => { g.qt = { ...q, ...v, nguoi: S.lic.name, chot: false }; await commit('Đã lưu quyết toán'); } }); };
-A['qt-chot'] = () => { const g = g0(); confirmBox('Chốt quyết toán?', `Chốt giá trị quyết toán <b>${vnd(g.qt.gt)}</b> cho ${esc(g.ma)}. Sau khi chốt, chỉ Giám đốc mở lại được để sửa.`, 'Chốt', async () => { g.qt.chot = true; g.qt.nguoiChot = S.lic.name; await commit('Đã chốt quyết toán'); }, false); };
+A['qt-chot'] = () => { const g = g0(); confirmBox('Chốt quyết toán?', `Chốt giá trị quyết toán <b>${vnd(g.qt.gt)}</b> cho ${esc(g.ma)}. Sau khi chốt, chỉ Giám đốc hoặc Trưởng nhóm mở lại được để sửa.`, 'Chốt', async () => { g.qt.chot = true; g.qt.nguoiChot = S.lic.name; await commit('Đã chốt quyết toán'); }, false); };
 A['qt-mo'] = async () => { const g = g0(); g.qt.chot = false; await commit('Đã mở lại quyết toán'); };
 
 A['bg-new'] = () => bgForm(); A['bg-edit'] = el => bgForm(S.banGiao.find(x => x.id === el.dataset.id));
