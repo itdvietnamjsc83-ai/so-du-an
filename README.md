@@ -18,7 +18,7 @@ macOS: bộ cài chưa ký bởi Apple, lần đầu mở chuột phải vào �
 - Bộ cài chứa một **khóa kiểm tra cố định** (`src-tauri/src/master_pub.txt`). Không bao giờ đổi tệp này: đổi là mọi key đã cấp mất hiệu lực.
 - Khóa ký gốc tương ứng (tệp `master-key-*.json`) do nhà cung cấp giữ, **không đưa vào kho mã**. Dùng nó để cấp key Giám đốc:
   - trong phần mềm: màn hình kích hoạt → "Nhà cung cấp: cấp key Giám đốc", hoặc
-  - dòng lệnh: `cargo run --bin sda-keygen -- director <tệp-khóa-gốc.json> <YYYY-MM-DD> [mã máy]`.
+  - dòng lệnh: `cargo run --features keygen --bin sda-keygen -- director <tệp-khóa-gốc.json> <YYYY-MM-DD> [mã máy]`.
 - Giám đốc cấp key Trưởng nhóm, Nhân viên trong mục **Quản lý key** (cần mã máy của người dùng, hiện ở màn hình kích hoạt).
 
 ## Phát triển
