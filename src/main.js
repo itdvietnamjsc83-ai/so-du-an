@@ -50,11 +50,12 @@ function welcome() {
   return new Promise(res => {
     $('#app').hidden = true;
     $('#gate').innerHTML = `<div class="gate"><div class="act-card welcome">
-      ${d.logo ? `<img class="wl-logo" src="${d.logo}" alt="">` : '<div class="brand-mark" style="width:44px;height:44px;font-size:20px">S</div>'}
-      <h1>Sổ Dự Án <span class="muted" style="font-size:13px;font-weight:400">phiên bản ${esc(S.info?.version || '')}</span></h1>
-      ${d.ten ? `<div class="wl-dev"><div class="muted" style="font-size:12px">Phát triển bởi</div><div class="wl-name">${esc(d.ten)}</div></div>` : ''}
+      <div class="row" style="gap:10px"><div class="brand-mark" style="width:40px;height:40px;font-size:18px">S</div>
+      <h1>Sổ Dự Án <span class="muted" style="font-size:13px;font-weight:400">phiên bản ${esc(S.info?.version || '')}</span></h1></div>
+      ${d.logo ? `<div class="wl-logo"><img src="${d.logo}" alt="${esc(d.ten)}"></div>` : ''}
+      ${d.ten ? `<div class="wl-dev"><div class="wl-cap">Nhà phát triển</div><div class="wl-name">${esc(d.ten)}</div></div>` : ''}
       ${d.gioiThieu ? `<p>${esc(d.gioiThieu)}</p>` : ''}
-      <div class="wl-info">${ln('Địa chỉ', d.diaChi)}${ln('Điện thoại', d.dienThoai)}${ln('Email', d.email)}${ln('Website', d.website)}${ln('Mã số thuế', d.mst)}</div>
+      <div class="wl-info">${ln('Điện thoại / Zalo', d.dienThoai)}${ln('Email', d.email)}${ln('Website', d.website)}${ln('Địa chỉ', d.diaChi)}${ln('Mã số thuế', d.mst)}</div>
       <button class="btn pri" id="wl-go" style="width:100%;justify-content:center">Bắt đầu sử dụng</button>
       ${d.banQuyen ? `<div class="muted" style="font-size:12px;text-align:center">${esc(d.banQuyen)}</div>` : ''}</div></div>`;
     const b = $('#wl-go'); b.focus();
