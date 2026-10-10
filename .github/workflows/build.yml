@@ -38,21 +38,16 @@ jobs:
       - run: npm ci
       - name: Kiểm tra lõi Rust
         run: cargo test --manifest-path src-tauri/Cargo.toml --lib
-      - name: Build (ghi nhật ký)
-        if: matrix.name == 'macos' && !startsWith(github.ref, 'refs/tags/v')
-        shell: bash
-        run: |
-          set -o pipefail
-          npm run tauri build -- ${{ matrix.args }} 2>&1 | tee build.log || { grep -iE "error|failed|panicked|cannot|not found" build.log | grep -v Compiling | tail -n 9 | sed 's/^/::error::/'; exit 1; }
       - name: Build
-        if: matrix.name == 'windows' || startsWith(github.ref, 'refs/tags/v')
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: ${{ matrix.args }}
-          tagName: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
-          releaseName: 'Sổ Dự Án ${{ github.ref_name }}'
+          # Mỗi lần đẩy lên main: cập nhật bản phát hành theo số phiên bản trong tauri.conf.json.
+          tagName: ${{ github.event_name == 'push' && 'v__VERSION__' || '' }}
+          releaseName: 'Sổ Dự Án v__VERSION__'
+          releaseBody: 'Windows: tải tệp .exe. macOS: tải tệp .dmg.'
           releaseDraft: false
       - uses: actions/upload-artifact@v4
         with:
