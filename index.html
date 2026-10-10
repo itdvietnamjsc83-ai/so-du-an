@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sổ Dự Án</title>
+</head>
+<body>
+<div class="app" id="app" hidden>
+  <aside class="side" id="side"></aside>
+  <div class="main">
+    <header class="top">
+      <nav class="crumbs" id="crumbs" aria-label="Vị trí"></nav>
+      <div class="spacer"></div>
+      <button class="bell" data-act="bell" aria-label="Thông báo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="bc" id="bell-n"></span></button>
+      <button class="lic" data-act="lic" id="lic"></button>
+    </header>
+    <main class="content"><div class="wrap" id="view"></div></main>
+  </div>
+</div>
+<div id="gate"></div>
+<div id="modal-root"></div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
