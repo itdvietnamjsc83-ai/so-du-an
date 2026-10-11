@@ -3,7 +3,7 @@ import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 import { save as saveDlg, open as openDlg } from '@tauri-apps/plugin-dialog';
 import { openPath } from '@tauri-apps/plugin-opener';
-import { S, api, esc, d, vnd, today, uid, gtById, daById, ntById, donVi, ntRows, cat, days, bbNorm, flush, kvSet } from './core.js';
+import { S, api, esc, d, vnd, today, uid, gtById, daById, ntById, donVi, ntRows, tc, cat, days, bbNorm, flush, kvSet } from './core.js';
 import { modal, closeModal, toast, ic, confirmBox } from './ui.js';
 
 const ASSETS = import.meta.glob('./templates/*.docx', { query: '?url', import: 'default', eager: true });
@@ -25,15 +25,23 @@ export const BUILTIN = [
 ];
 export const BUILTIN_NHOM = ['Họp', 'Làm việc', 'Nghiệm thu', 'Bàn giao', 'Văn bản'];
 
-/** Trường lấy từ dữ liệu phần mềm. */
+/** Trường lấy từ dữ liệu phần mềm. Gõ {Mã trường} vào file Word, khi tạo biên bản phần mềm tự điền. */
 export const TPF = [
-  ['Dự án', [['DuAn.Ten', 'Tên dự án'], ['DuAn.DiaDiem', 'Địa điểm xây dựng'], ['DuAn.NhomDuAn', 'Nhóm dự án']]],
-  ['Chủ đầu tư', [['ChuDauTu.Ten', 'Tên chủ đầu tư'], ['ChuDauTu.DiaChi', 'Địa chỉ'], ['ChuDauTu.DaiDien', 'Người đại diện'], ['ChuDauTu.ChucVu', 'Chức vụ']]],
-  ['Tư vấn QLDA', [['TuVanQLDA.Ten', 'Tên đơn vị'], ['TuVanQLDA.DiaChi', 'Địa chỉ'], ['TuVanQLDA.DaiDien', 'Người đại diện']]],
-  ['Gói thầu, hợp đồng', [['GoiThau.Ma', 'Mã gói'], ['GoiThau.Ten', 'Tên gói thầu'], ['HopDong.So', 'Số hợp đồng'], ['HopDong.Ngay', 'Ngày ký'], ['HopDong.GiaTri', 'Giá trị hợp đồng']]],
-  ['Nhà thầu', [['NhaThau.Ten', 'Tên nhà thầu'], ['NhaThau.DiaChi', 'Địa chỉ'], ['NhaThau.DaiDien', 'Người đại diện'], ['NhaThau.ChucVu', 'Chức vụ']]],
-  ['Nghiệm thu, thanh toán', [['DotNghiemThu.So', 'Đợt số'], ['DotNghiemThu.GiaTri', 'Giá trị nghiệm thu'], ['DotNghiemThu.KhauTruTamUng', 'Khấu trừ tạm ứng'], ['DotNghiemThu.GiuBaoHanh', 'Giữ bảo hành'], ['DotNghiemThu.DeNghiThanhToan', 'Đề nghị thanh toán']]],
-  ['Chung', [['SoVanBan', 'Số văn bản'], ['Ngay', 'Ngày lập'], ['DiaDiem', 'Địa danh'], ['ThanhPhan', 'Thành phần tham gia'], ['ViecQuaHan', 'Danh sách việc quá hạn của gói']]],
+  ['Dự án', [['DuAn.Ten', 'Tên dự án'], ['DuAn.DiaDiem', 'Địa điểm xây dựng'], ['DuAn.NhomDuAn', 'Nhóm dự án'], ['DuAn.NgayBatDau', 'Ngày bắt đầu'], ['DuAn.NgayKetThuc', 'Ngày kết thúc'], ['DuAn.TruongNhom', 'Trưởng nhóm phụ trách'], ['DuAn.TrangThai', 'Trạng thái dự án']]],
+  ['Chủ đầu tư', [['ChuDauTu.Ten', 'Tên chủ đầu tư'], ['ChuDauTu.DiaChi', 'Địa chỉ'], ['ChuDauTu.DaiDien', 'Người đại diện'], ['ChuDauTu.ChucVu', 'Chức vụ'], ['ChuDauTu.DanhSachNguoi', 'Danh sách người của chủ đầu tư']]],
+  ['Tư vấn QLDA (đơn vị mình)', [['TuVanQLDA.Ten', 'Tên đơn vị'], ['TuVanQLDA.DiaChi', 'Địa chỉ'], ['TuVanQLDA.DaiDien', 'Người đại diện'], ['TuVanQLDA.ChucVu', 'Chức vụ người đại diện'], ['TuVanQLDA.DanhSachNguoi', 'Danh sách cán bộ']]],
+  ['Gói thầu, hợp đồng', [['GoiThau.Ma', 'Mã gói'], ['GoiThau.Ten', 'Tên gói thầu'], ['HopDong.So', 'Số hợp đồng'], ['HopDong.Ngay', 'Ngày ký'], ['HopDong.GiaTri', 'Giá trị hợp đồng'], ['HopDong.GiaTriBangChu', 'Giá trị hợp đồng bằng chữ'],
+    ['HopDong.TamUng', 'Tổng tạm ứng'], ['HopDong.TyLeThuHoiTamUng', 'Tỷ lệ thu hồi tạm ứng mỗi đợt'], ['HopDong.TamUngConLai', 'Tạm ứng còn phải thu hồi'], ['HopDong.SoNgayThanhToan', 'Số ngày phải thanh toán sau nghiệm thu'],
+    ['HopDong.DaNghiemThu', 'Lũy kế đã nghiệm thu'], ['HopDong.DaThanhToan', 'Lũy kế đã thanh toán'], ['HopDong.CongNo', 'Công nợ còn phải trả'], ['HopDong.ConLai', 'Giá trị hợp đồng chưa nghiệm thu']]],
+  ['Nhà thầu', [['NhaThau.Ten', 'Tên nhà thầu'], ['NhaThau.DiaChi', 'Địa chỉ'], ['NhaThau.DaiDien', 'Người đại diện'], ['NhaThau.ChucVu', 'Chức vụ'], ['NhaThau.DienThoai', 'Điện thoại'], ['NhaThau.Email', 'Email'], ['NhaThau.DanhSachNguoi', 'Danh sách người của nhà thầu']]],
+  ['Nghiệm thu, thanh toán (đợt chọn khi tạo biên bản)', [['DotNghiemThu.So', 'Đợt số'], ['DotNghiemThu.Ngay', 'Ngày nghiệm thu'], ['DotNghiemThu.GiaTri', 'Giá trị nghiệm thu'], ['DotNghiemThu.GiaTriBangChu', 'Giá trị nghiệm thu bằng chữ'], ['DotNghiemThu.LuyKe', 'Lũy kế nghiệm thu đến đợt này'],
+    ['DotNghiemThu.KhauTruTamUng', 'Khấu trừ tạm ứng'], ['DotNghiemThu.GiuBaoHanh', 'Giữ bảo hành'], ['DotNghiemThu.DeNghiThanhToan', 'Đề nghị thanh toán'], ['DotNghiemThu.DeNghiBangChu', 'Đề nghị thanh toán bằng chữ'],
+    ['DotNghiemThu.DaTra', 'Đã trả cho đợt'], ['DotNghiemThu.ConPhaiTra', 'Còn phải trả của đợt'], ['DotNghiemThu.HanThanhToan', 'Hạn thanh toán']]],
+  ['Bảo hành', [['BaoHanh.HinhThuc', 'Hình thức bảo hành'], ['BaoHanh.TyLe', 'Tỷ lệ bảo hành'], ['BaoHanh.HetHan', 'Ngày hết thời gian bảo hành'], ['BaoHanh.TienDangGiu', 'Tiền đang giữ bảo hành'],
+    ['BaoHanh.SoThu', 'Số thư bảo lãnh'], ['BaoHanh.NganHang', 'Ngân hàng bảo lãnh'], ['BaoHanh.GiaTriThu', 'Giá trị thư bảo lãnh'], ['BaoHanh.ThuHetHan', 'Ngày thư bảo lãnh hết hạn']]],
+  ['Quyết toán', [['QuyetToan.GiaTri', 'Giá trị quyết toán'], ['QuyetToan.GiaTriBangChu', 'Giá trị quyết toán bằng chữ'], ['QuyetToan.NgayPheDuyet', 'Ngày phê duyệt'], ['QuyetToan.ConPhaiTra', 'Còn phải trả nhà thầu']]],
+  ['Tiến độ gói thầu', [['TienDo.TongViec', 'Tổng số công việc'], ['TienDo.DaXong', 'Số việc đã xong'], ['TienDo.PhanTram', 'Phần trăm hoàn thành'], ['TienDo.SoViecQuaHan', 'Số việc quá hạn'], ['ViecQuaHan', 'Danh sách việc quá hạn'], ['TienDo.ViecSapDenHan', 'Danh sách việc sắp đến hạn (7 ngày)'], ['TienDo.ViecDangLam', 'Danh sách việc đang làm'], ['TienDo.ViecDaXong', 'Danh sách việc đã xong']]],
+  ['Chung', [['SoVanBan', 'Số văn bản'], ['Ngay', 'Ngày lập (ngày ... tháng ... năm ...)'], ['NgaySo', 'Ngày lập dạng dd/mm/yyyy'], ['Nam', 'Năm lập'], ['DiaDiem', 'Địa danh'], ['ThanhPhan', 'Thành phần tham gia (chọn khi tạo)']]],
 ];
 const KNOWN = new Set(TPF.flatMap(([, f]) => f.map(x => x[0])));
 const RIENG_LABEL = { ThoiGianHop: 'Thời gian họp', DiaDiemHop: 'Địa điểm họp', NoiDungHop: 'Nội dung họp', ChuTri: 'Chủ trì', YKien: 'Ý kiến các bên', KetLuan: 'Kết luận', DiaDiemLamViec: 'Địa điểm làm việc', NoiDungLamViec: 'Nội dung làm việc', HienTrang: 'Hiện trạng', YeuCau: 'Tồn tại, yêu cầu khắc phục', ThoiHanKhacPhuc: 'Thời hạn khắc phục', CongViecNghiemThu: 'Công việc nghiệm thu', ViTri: 'Vị trí', CanCu: 'Căn cứ', DanhGia: 'Đánh giá', BoPhan: 'Giai đoạn, bộ phận', HangMuc: 'Hạng mục, công trình', NoiDungBanGiao: 'Nội dung bàn giao', HoSoKemTheo: 'Hồ sơ kèm theo', HanBaoCao: 'Hạn báo cáo', NoiDungTrinh: 'Nội dung trình', DeXuat: 'Đề xuất' };
@@ -85,6 +93,20 @@ export async function seedBuiltins() {
 }
 
 /* ---------- dữ liệu điền vào mẫu ---------- */
+const CS = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+function ba(n, full) { const tr = Math.floor(n / 100), ch = Math.floor(n / 10) % 10, dv = n % 10; const o = [];
+  if (full || tr) o.push(CS[tr] + ' trăm');
+  if (ch > 1) o.push(CS[ch] + ' mươi'); else if (ch === 1) o.push('mười'); else if ((full || tr) && dv) o.push('lẻ');
+  if (dv) o.push(dv === 1 && ch > 1 ? 'mốt' : dv === 5 && ch > 0 ? 'lăm' : dv === 4 && ch > 1 ? 'tư' : CS[dv]);
+  return o.join(' '); }
+/** Đọc số tiền thành chữ: 1250000 → "Một triệu hai trăm năm mươi nghìn đồng". */
+export function docTien(x) {
+  let n = Math.round(Math.abs(+x || 0)); if (!n) return 'Không đồng';
+  const U = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ', 'triệu tỷ']; const g = []; while (n > 0) { g.push(n % 1000); n = Math.floor(n / 1000); }
+  const out = []; for (let i = g.length - 1; i >= 0; i--) if (g[i]) out.push(ba(g[i], i < g.length - 1), U[i]);
+  const s = out.join(' ').replace(/\s+/g, ' ').trim(); return (x < 0 ? 'Âm ' : '') + s.charAt(0).toUpperCase() + s.slice(1) + ' đồng';
+}
+
 const ngayVN = s => `ngày ${s.slice(8)} tháng ${s.slice(5, 7)} năm ${s.slice(0, 4)}`;
 function orgsOf(b) {
   const a = daById(b.da); if (!a) return [];
@@ -94,7 +116,7 @@ function orgsOf(b) {
   const seen = new Set(); gts.forEach(g => { const n = S.nhaThau.find(x => x.id === g.nt); if (!n || seen.has(n.id)) return; seen.add(n.id); o.push({ k: 'nt-' + n.id, loai: 'Nhà thầu', ten: n.ten, dc: n.dc, nguoi: n.nguoi || [] }); });
   return o;
 }
-function dataFor(b, tpl) {
+export function dataFor(b, tpl) {
   const a = daById(b.da) || {}; const g = b.gt ? gtById(b.gt) : null; const n = g ? ntById(g.nt) : {}; const dv = donVi();
   const nt = g && b.dot ? ntRows(g.id).find(x => x.id === b.dot) : null;
   const orgs = orgsOf(b).filter(o => b.org[o.k]);
@@ -116,6 +138,28 @@ function dataFor(b, tpl) {
     'DotNghiemThu.So': nt?.dot, 'DotNghiemThu.GiaTri': nt ? vnd(nt.gtri) : '', 'DotNghiemThu.KhauTruTamUng': nt ? vnd(nt.khauTru) : '', 'DotNghiemThu.GiuBaoHanh': nt ? vnd(nt.giu) : '', 'DotNghiemThu.DeNghiThanhToan': nt ? vnd(nt.deNghi) : '',
     SoVanBan: b.so || '....../' + (moi ? 'GM' : 'BB'), Ngay: ngayVN(b.ngay || today()), DiaDiem: dv.tinh || '', ThanhPhan: lines.join('\n'), ViecQuaHan: qh || '(không có việc quá hạn)',
   };
+  const t = g ? tc(g.id) : null; const bh = g?.bh || {}; const qt = g?.qt || null; const cvG = g ? S.congViec.filter(c => c.gt === g.id).sort((x, y) => (x.hh || '').localeCompare(y.hh || '')) : [];
+  const ds = arr => arr.map((c, i) => `${i + 1}. ${c.ten}: hạn ${d(c.hh)}${c.nguoi ? ', ' + c.nguoi : ''}`).join('\n');
+  const people = ps => (ps || []).map(p => `- ${p.ten}${p.cv ? ' – ' + p.cv : ''}`).join('\n');
+  const pc = x => ((x || 0) * 100).toLocaleString('vi-VN') + '%';
+  const luyKe = nt ? ntRows(g.id).filter(x => x.dot <= nt.dot).reduce((s, x) => s + x.gtri, 0) : 0;
+  const gtq = qt?.gt ?? t?.daNT ?? 0;
+  Object.assign(v, {
+    'DuAn.NgayBatDau': d(a.bd || ''), 'DuAn.NgayKetThuc': d(a.kt || ''), 'DuAn.TruongNhom': a.tn, 'DuAn.TrangThai': a.tt,
+    'ChuDauTu.DanhSachNguoi': people(a.cdtNguoi), 'TuVanQLDA.ChucVu': (dv.nguoi || [])[0]?.cv, 'TuVanQLDA.DanhSachNguoi': people(dv.nguoi),
+    'HopDong.GiaTriBangChu': g ? docTien(g.gt) : '', 'HopDong.TamUng': t ? vnd(t.tu) : '', 'HopDong.TyLeThuHoiTamUng': g ? pc(g.tlThuHoi) : '', 'HopDong.TamUngConLai': t ? vnd(t.tuCon) : '', 'HopDong.SoNgayThanhToan': g ? String(g.soNgayTT || 30) : '',
+    'HopDong.DaNghiemThu': t ? vnd(t.daNT) : '', 'HopDong.DaThanhToan': t ? vnd(t.daTT) : '', 'HopDong.CongNo': t ? vnd(t.congNo) : '', 'HopDong.ConLai': t ? vnd(t.conLaiHD) : '',
+    'NhaThau.DienThoai': n.sdt, 'NhaThau.Email': n.email, 'NhaThau.DanhSachNguoi': people(n.nguoi),
+    'DotNghiemThu.Ngay': nt ? d(nt.ngay) : '', 'DotNghiemThu.GiaTriBangChu': nt ? docTien(nt.gtri) : '', 'DotNghiemThu.LuyKe': nt ? vnd(luyKe) : '', 'DotNghiemThu.DeNghiBangChu': nt ? docTien(nt.deNghi) : '',
+    'DotNghiemThu.DaTra': nt ? vnd(nt.daTra) : '', 'DotNghiemThu.ConPhaiTra': nt ? vnd(Math.max(nt.con, 0)) : '', 'DotNghiemThu.HanThanhToan': nt ? d(nt.han) : '',
+    'BaoHanh.HinhThuc': g ? (bh.ht || 'Không có') : '', 'BaoHanh.TyLe': g ? pc(bh.tl) : '', 'BaoHanh.HetHan': bh.hhBH ? d(bh.hhBH) : '', 'BaoHanh.TienDangGiu': t ? vnd(t.giu) : '',
+    'BaoHanh.SoThu': bh.so, 'BaoHanh.NganHang': bh.nh, 'BaoHanh.GiaTriThu': bh.gt ? vnd(bh.gt) : '', 'BaoHanh.ThuHetHan': bh.hh ? d(bh.hh) : '',
+    'QuyetToan.GiaTri': g ? vnd(gtq) : '', 'QuyetToan.GiaTriBangChu': g ? docTien(gtq) : '', 'QuyetToan.NgayPheDuyet': qt?.ngay ? d(qt.ngay) : '', 'QuyetToan.ConPhaiTra': t ? vnd(gtq - t.tu - t.daTT) : '',
+    'TienDo.TongViec': g ? String(cvG.length) : '', 'TienDo.DaXong': g ? String(cvG.filter(c => c.tt === 'Hoàn thành').length) : '', 'TienDo.PhanTram': g ? (cvG.length ? Math.round(cvG.filter(c => c.tt === 'Hoàn thành').length / cvG.length * 100) : 0) + '%' : '',
+    'TienDo.SoViecQuaHan': g ? String(cvG.filter(c => cat(c) === 'quahan').length) : '', 'TienDo.ViecSapDenHan': ds(cvG.filter(c => c.tt !== 'Hoàn thành' && days(c.hh) >= 0 && days(c.hh) <= 7)),
+    'TienDo.ViecDangLam': ds(cvG.filter(c => c.tt === 'Đang làm')), 'TienDo.ViecDaXong': cvG.filter(c => c.tt === 'Hoàn thành').map((c, i) => `${i + 1}. ${c.ten}: xong ${d(c.xong)}`).join('\n'),
+    NgaySo: d(b.ngay || today()), Nam: (b.ngay || today()).slice(0, 4),
+  });
   b.fields.forEach(f => { if (f.k) v[f.k] = f.v; });
   Object.keys(v).forEach(k => { if (v[k] === undefined || v[k] === null) v[k] = ''; v[k] = String(v[k]); });
   return v;
