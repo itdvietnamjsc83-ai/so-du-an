@@ -257,6 +257,8 @@ table.pp td.bad{color:#b4322b;font-weight:600} table.pp td.warn{color:#a15c00;fo
 .bbprev{position:sticky;top:0}
 .bbsec{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:12px}
 .bbsec h3{font-size:13.5px;margin:0} .bbsec p{margin:0}
+.bbovf label{display:flex;justify-content:space-between;gap:8px;align-items:baseline} .bbovf .code{font-size:11px}
+.bbovf .ed{border-color:var(--warn);background:var(--warn-weak)}
 .bborg{border:1px solid var(--line);border-radius:8px;padding:4px 10px} .bborg.off{opacity:.6}
 .bbrow{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;align-items:center}
 .bbrow.f2{grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr) 32px}

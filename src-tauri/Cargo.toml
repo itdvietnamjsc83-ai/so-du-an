@@ -1,6 +1,6 @@
 [package]
 name = "so-du-an"
-version = "0.1.3"
+version = "0.1.4"
 description = "Sổ Dự Án - quản lý dự án offline"
 edition = "2021"
 default-run = "so-du-an"

@@ -137,6 +137,7 @@ async function bbAct(act, t) {
     case 'bb-ok': return BB.bbOk();
     case 'bb-addp': S.bb.extra.push({ ten: '', cv: '', dv: '' }); return BB.bbModal();
     case 'bb-addf': S.bb.fields.push({ k: '', v: '' }); return BB.bbModal();
+    case 'bb-reset': delete S.bb.ov[t.dataset.k]; return BB.bbModal();
     case 'bb-delx': S.bb[t.dataset.kind].splice(i, 1); return BB.bbModal();
     case 'bb-dl': return BB.bbDownload(id);
     case 'bb-dlv': return BB.bbDownload(id, S.bienBanMau.find(b => b.id === id).ls[i].file);

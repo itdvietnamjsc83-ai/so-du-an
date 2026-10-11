@@ -44,6 +44,8 @@ export const TPF = [
   ['Chung', [['SoVanBan', 'Số văn bản'], ['Ngay', 'Ngày lập (ngày ... tháng ... năm ...)'], ['NgaySo', 'Ngày lập dạng dd/mm/yyyy'], ['Nam', 'Năm lập'], ['DiaDiem', 'Địa danh'], ['ThanhPhan', 'Thành phần tham gia (chọn khi tạo)']]],
 ];
 const KNOWN = new Set(TPF.flatMap(([, f]) => f.map(x => x[0])));
+const FLABEL = Object.fromEntries(TPF.flatMap(([, f]) => f));
+const LABEL2K = Object.fromEntries(TPF.flatMap(([, f]) => f.map(([k, l]) => [l, k])));
 const RIENG_LABEL = { ThoiGianHop: 'Thời gian họp', DiaDiemHop: 'Địa điểm họp', NoiDungHop: 'Nội dung họp', ChuTri: 'Chủ trì', YKien: 'Ý kiến các bên', KetLuan: 'Kết luận', DiaDiemLamViec: 'Địa điểm làm việc', NoiDungLamViec: 'Nội dung làm việc', HienTrang: 'Hiện trạng', YeuCau: 'Tồn tại, yêu cầu khắc phục', ThoiHanKhacPhuc: 'Thời hạn khắc phục', CongViecNghiemThu: 'Công việc nghiệm thu', ViTri: 'Vị trí', CanCu: 'Căn cứ', DanhGia: 'Đánh giá', BoPhan: 'Giai đoạn, bộ phận', HangMuc: 'Hạng mục, công trình', NoiDungBanGiao: 'Nội dung bàn giao', HoSoKemTheo: 'Hồ sơ kèm theo', HanBaoCao: 'Hạn báo cáo', NoiDungTrinh: 'Nội dung trình', DeXuat: 'Đề xuất' };
 const LONG = new Set(['NoiDungHop', 'YKien', 'KetLuan', 'NoiDungLamViec', 'HienTrang', 'YeuCau', 'DanhGia', 'NoiDungBanGiao', 'HoSoKemTheo', 'NoiDungTrinh', 'DeXuat', 'CanCu']);
 const rLabel = k => RIENG_LABEL[k] || k.replace(/([a-z])([A-Z])/g, '$1 $2');
@@ -161,6 +163,7 @@ export function dataFor(b, tpl) {
     NgaySo: d(b.ngay || today()), Nam: (b.ngay || today()).slice(0, 4),
   });
   b.fields.forEach(f => { if (f.k) v[f.k] = f.v; });
+  Object.entries(b.ov || {}).forEach(([k, x]) => { v[k] = x; });
   Object.keys(v).forEach(k => { if (v[k] === undefined || v[k] === null) v[k] = ''; v[k] = String(v[k]); });
   return v;
 }
@@ -181,11 +184,12 @@ function render(bytes, data, extraParas) {
 const xe = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /* ---------- tạo biên bản từ mẫu ---------- */
-export function bbNew(id) {
+export async function bbNew(id) {
   const tpl = S.bienBanMau.find(x => x.id === id); if (!tpl) return;
+  let used = []; try { used = classify(scanTags(await readStored(tpl.file))).known; } catch { /* mẫu hỏng: vẫn cho tạo */ }
   const g0 = gtById(S.gtSel) || null; const da = g0?.da || S.duAn || S.duAnList[0]?.id;
   if (!da) { toast('Cần tạo dự án trước'); return; }
-  S.bb = { id, da, gt: g0 && g0.da === da ? g0.id : '', org: {}, pick: {}, extra: [], so: '', ngay: today(), dot: '', hop: tpl.nhom === 'Họp', hopLuc: '',
+  S.bb = { id, da, gt: g0 && g0.da === da ? g0.id : '', org: {}, pick: {}, extra: [], so: '', ngay: today(), dot: '', hop: tpl.nhom === 'Họp', hopLuc: '', used, ov: {},
     fields: (tpl.rieng || []).map(k => ({ k, v: '', fix: 1 })) };
   bbDefaults(); bbModal();
 }
@@ -205,13 +209,23 @@ export function bbModal() {
       ${o.nguoi.map((n, i) => `<label class="rp-l rp-gt"><input type="checkbox" class="check" data-bbp="${o.k}:${i}" ${b.pick[o.k + ':' + i] ? 'checked' : ''} ${b.org[o.k] ? '' : 'disabled'}>${esc(n.ten)} <span class="muted" style="margin-left:0">· ${esc(n.cv)}</span></label>`).join('') || '<span class="muted rp-gt" style="font-size:12px">Chưa có người. Thêm người ở mục Nhà thầu & đơn vị hoặc thông tin dự án.</span>'}</div>`).join('')}
     ${b.extra.map((x, i) => `<div class="bbrow"><input placeholder="Họ tên" value="${esc(x.ten)}" data-bbx="${i},ten" aria-label="Họ tên"><input placeholder="Chức vụ" value="${esc(x.cv)}" data-bbx="${i},cv" aria-label="Chức vụ"><input placeholder="Đơn vị, bộ phận" value="${esc(x.dv)}" data-bbx="${i},dv" aria-label="Đơn vị"><button class="btn sm ghost-bad" data-act="bb-delx" data-kind="extra" data-i="${i}" aria-label="Xóa">×</button></div>`).join('')}
     <button class="btn sm" data-act="bb-addp">+ Thêm người, bộ phận khác</button></div>
-    <div class="bbsec"><h3>Nội dung nhập thêm</h3><p class="muted">Trường riêng của mẫu và trường bạn tự thêm (trường tự thêm được ghi cuối văn bản).</p>
+    ${autoSec(b, tpl)}
+    <div class="bbsec"><h3>Trường riêng, trường thêm</h3><p class="muted">Trường riêng của mẫu và trường bạn tự thêm. Trường tự thêm được ghi cuối văn bản; ô tên trường chọn được cả trường dữ liệu có sẵn.</p>
     ${b.fields.map((f, i) => f.fix ? `<div class="field"><label>${esc(rLabel(f.k))}</label>${LONG.has(f.k) ? `<textarea rows="3" data-bbf="${i},v">${esc(f.v)}</textarea>` : `<input value="${esc(f.v)}" data-bbf="${i},v">`}</div>`
-      : `<div class="bbrow f2"><input value="${esc(f.k)}" data-bbf="${i},k" placeholder="Tên trường" aria-label="Tên trường"><input value="${esc(f.v)}" data-bbf="${i},v" placeholder="Nội dung" aria-label="Nội dung"><button class="btn sm ghost-bad" data-act="bb-delx" data-kind="fields" data-i="${i}" aria-label="Xóa">×</button></div>`).join('')}
-    <button class="btn sm" data-act="bb-addf">+ Thêm trường</button></div>
+      : `<div class="bbrow f2"><input value="${esc(f.k)}" data-bbf="${i},k" placeholder="Tên trường" aria-label="Tên trường" list="bb-fl"><input value="${esc(f.v)}" data-bbf="${i},v" placeholder="Nội dung" aria-label="Nội dung"><button class="btn sm ghost-bad" data-act="bb-delx" data-kind="fields" data-i="${i}" aria-label="Xóa">×</button></div>`).join('')}
+    <button class="btn sm" data-act="bb-addf">+ Thêm trường</button><datalist id="bb-fl">${TPF.flatMap(([, fs]) => fs).map(([, l]) => `<option value="${esc(l)}">`).join('')}</datalist></div>
     ${b.hop ? `<div class="bbsec"><h3>Lịch họp</h3><label class="rp-l"><input type="checkbox" class="check" data-bbhop="1" ${b.hopLuc ? 'checked' : ''}>Thêm vào lịch họp của dự án để nhắc</label>${b.hopLuc ? `<input type="datetime-local" data-bbv="hopLuc" value="${b.hopLuc}" class="cell-in" style="margin-top:6px">` : ''}</div>` : ''}`;
   modal(tpl.ten, `<div class="bbwrap"><div class="bbform">${left}</div><div class="bbprev"><div class="muted" style="margin-bottom:6px">Xem trước · phần tô vàng là phần mềm tự điền</div><div id="bb-prev">${bbPreview()}</div></div></div>`,
     `<span class="muted" style="margin-right:auto">Xuất file Word theo mẫu, rồi mở bằng Word để sửa tiếp</span><button class="btn" data-close="1">Hủy</button><button class="btn pri" data-act="bb-ok">Xuất file Word</button>`, 'wide');
+}
+/** Trường dữ liệu có trong mẫu: hiện giá trị phần mềm điền, cho sửa từng trường. */
+function autoSec(b, tpl) {
+  const used = (b.used || []).filter(k => k !== 'ThanhPhan'); if (!used.length) return '';
+  const auto = dataFor({ ...b, ov: {} }, tpl);
+  return `<div class="bbsec"><h3>Dữ liệu tự điền (sửa được)</h3><p class="muted">Các trường dữ liệu có trong mẫu này. Sửa ô nào thì biên bản dùng nội dung đã sửa; bấm "Lấy lại" để về dữ liệu của phần mềm.</p>
+    ${used.map(k => { const ed = k in b.ov; const val = ed ? b.ov[k] : auto[k]; const long = /\n/.test(auto[k] || '') || /DanhSach|^Viec|TienDo\.Viec/.test(k);
+      return `<div class="field bbovf"><label><span>${esc(FLABEL[k] || k)} <span class="code muted">{${esc(k)}}</span></span>${ed ? `<button class="linkbtn" data-act="bb-reset" data-k="${esc(k)}">Lấy lại dữ liệu gốc</button>` : ''}</label>
+      ${long ? `<textarea rows="3" data-bbov="${esc(k)}" class="${ed ? 'ed' : ''}">${esc(val)}</textarea>` : `<input value="${esc(val)}" data-bbov="${esc(k)}" class="${ed ? 'ed' : ''}" placeholder="(phần mềm chưa có dữ liệu, gõ để điền)">`}</div>`; }).join('')}</div>`;
 }
 export function bbPreview() {
   const b = S.bb, tpl = S.bienBanMau.find(x => x.id === b.id); const v = dataFor(b, tpl);
@@ -227,8 +241,11 @@ export function bbPreview() {
 export const bbRefresh = () => { const e = document.getElementById('bb-prev'); if (e) e.innerHTML = bbPreview(); };
 export function bbChange(t) {
   const b = S.bb; if (!b) return false;
-  if (t.id === 'bb-da') { b.da = t.value; b.gt = ''; b.dot = ''; bbDefaults(); bbModal(); return true; }
-  if (t.id === 'bb-gt') { b.gt = t.value; b.dot = ''; bbDefaults(true); bbModal(); return true; }
+  if (t.id === 'bb-da') { b.da = t.value; b.gt = ''; b.dot = ''; b.ov = {}; bbDefaults(); bbModal(); return true; }
+  if (t.id === 'bb-gt') { b.gt = t.value; b.dot = ''; b.ov = {}; bbDefaults(true); bbModal(); return true; }
+  if (t.id === 'bb-dot') { b.dot = t.value; bbModal(); return true; }
+  if (t.dataset.bbov !== undefined) return true;
+  if (t.dataset.bbf?.endsWith(',k')) { const f = b.fields[+t.dataset.bbf.split(',')[0]]; const k = LABEL2K[t.value]; if (k && !f.v) { f.v = dataFor({ ...b, ov: {} }, S.bienBanMau.find(x => x.id === b.id))[k]; bbModal(); return true; } }
   if (t.dataset.bbo) { b.org[t.dataset.bbo] = t.checked; bbModal(); return true; }
   if (t.dataset.bbp) { b.pick[t.dataset.bbp] = t.checked; bbRefresh(); return true; }
   if (t.dataset.bbhop) { b.hopLuc = t.checked ? (today() + 'T08:00') : ''; bbModal(); return true; }
@@ -238,6 +255,9 @@ export function bbChange(t) {
 export function bbInput(t) {
   const b = S.bb; if (!b) return false;
   const bx = t.dataset.bbx, bf = t.dataset.bbf;
+  if (t.dataset.bbov !== undefined) { const k = t.dataset.bbov; b.ov[k] = t.value; t.classList.add('ed');
+    const lab = t.previousElementSibling; if (lab && !lab.querySelector('[data-act="bb-reset"]')) lab.insertAdjacentHTML('beforeend', `<button class="linkbtn" data-act="bb-reset" data-k="${esc(k)}">Lấy lại dữ liệu gốc</button>`);
+    bbRefresh(); return true; }
   if (bx || bf) { const [i, k] = (bx || bf).split(','); b[bx ? 'extra' : 'fields'][+i][k] = t.value; bbRefresh(); return true; }
   if (t.dataset.bbv) { b[t.dataset.bbv] = t.value; bbRefresh(); return true; }
   return false;
