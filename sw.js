@@ -1,0 +1,6 @@
+const C='sda-0.1.4-mv3yyic9',F=["./","./assets/logo-itd-DgUCpL7Y.png","./assets/index-CEw9J4IX.css","./assets/index-C_c5D6pX.js","./assets/report-CVOU32qn.js","./assets/html2canvas.esm-DXEQVQnt.js","./assets/jspdf.es.min-BpedNzTw.js","./assets/index-DENm2QBK.js","./assets/index-zBIzd2Nl.js","./assets/index-CdpL74cz.js","./assets/index-B6uvJJ7x.js","./assets/purify.es-DrLDRNlj.js","./assets/index.es-BzAc2-sH.js","./assets/_commonjsHelpers-Cpj98o6Y.js","./assets/web-cgOxGeFG.js","./assets/web-DYNm8XbY.js","./assets/web-D_aGGrmc.js","./manifest.webmanifest","./icon-192.png","./icon-512.png","./apple-touch-icon.png"];
+self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(F)).then(()=>self.skipWaiting()))});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
+self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;
+if(r.mode==='navigate'){e.respondWith(fetch(r).then(x=>{const y=x.clone();caches.open(C).then(c=>c.put('./',y));return x}).catch(()=>caches.match('./')));return}
+e.respondWith(caches.match(r).then(h=>h||fetch(r).then(x=>{if(x.ok&&(r.url.startsWith(self.location.origin)||r.url.includes('fonts.g'))){const y=x.clone();caches.open(C).then(c=>c.put(r,y))}return x})))});
