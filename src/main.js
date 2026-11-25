@@ -15,6 +15,8 @@ import './excelin.js';
 import { DEV } from './developer.js';
 import * as BB from './bienban.js';
 import { start as startNotify } from './notify.js';
+import { listen } from '@tauri-apps/api/event';
+import { afterSync, lockGate, maybeWizard, waitBanner } from './team.js';
 
 /** Quyền cần cho mỗi thao tác (kiểm tra lại ở đây, phòng khi nút còn sót trên màn hình). */
 const ACTPERM = {
@@ -32,7 +34,7 @@ function render() {
   renderSide(); renderCrumbs(); renderLic();
   const n = $('#bell-n'); const k = document.querySelectorAll('#side .badge')[0]?.textContent || ''; n.textContent = k; n.style.display = k ? '' : 'none';
   const sc = $('.content').scrollTop; const same = render.last === S.view + S.duAn + S.gtSel + S.tab;
-  $('#view').innerHTML = (V[S.view] || V.tongquan)();
+  $('#view').innerHTML = (S.view === 'dongbo' ? '' : waitBanner()) + (V[S.view] || V.tongquan)();
   $('.content').scrollTop = same ? sc : 0; render.last = S.view + S.duAn + S.gtSel + S.tab;
   if (S.view === 'caidat' && can('nhatKy')) loadLog();
 }
@@ -89,12 +91,14 @@ A['g-prov'] = () => providerModal();
 /* ---------- vào phần mềm ---------- */
 async function enter() {
   await load();
+  if (lockGate()) return;
   $('#app').hidden = false;
   try { await BB.seedBuiltins(); } catch (e) { console.error('seed', e); }
   if (!S.rp.sel.length) S.rp.sel = S.goiThau.map(g => g.id);
   syncAutostart();
   render();
-  if (!enter.started) { enter.started = true; startNotify(); }
+  if (!enter.started) { enter.started = true; startNotify(); listen('sda-synced', ev => afterSync(ev.payload, false).catch(console.error)); }
+  maybeWizard();
 }
 async function syncAutostart() { try { const want = !!S.nh.autostart; if ((await autoIs()) !== want) await (want ? autoOn() : autoOff()); } catch (e) { console.warn('autostart', e); } }
 
@@ -195,6 +199,8 @@ window.addEventListener('sda-render', render);
 window.addEventListener('sda-notified', () => { if (S.view === 'nhacviec') render(); });
 window.addEventListener('sda-reload', async () => { S.lic = (await api('app_info')).license; if (!S.lic.activated) { location.reload(); return; } await load(); render(); });
 window.addEventListener('sda-error', e => toast('Không lưu được: ' + e.detail, 5000));
+window.addEventListener('sda-proposed', e => { toast(e.detail, 5000); render(); });
+window.addEventListener('sda-kick', () => api('sync_kick').catch(() => {}));
 // Ngày mới (để máy chạy qua đêm): vẽ lại cho đúng hạn còn lại.
 let day = today(); setInterval(() => { if (today() !== day) { day = today(); render(); } }, 60000);
 

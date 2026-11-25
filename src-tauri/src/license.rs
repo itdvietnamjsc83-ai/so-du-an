@@ -46,7 +46,13 @@ pub fn date_to_days(s: &str) -> Result<u16, String> {
     Ok(n as u16)
 }
 
+/// Chỉ dùng khi chạy kiểm thử: khóa gốc giả để tạo key thử. Bộ cài thật luôn dùng master_pub.txt.
+#[cfg(test)]
+pub static TEST_MASTER: std::sync::OnceLock<[u8; 32]> = std::sync::OnceLock::new();
+
 pub fn master_pub() -> Result<VerifyingKey, String> {
+    #[cfg(test)]
+    if let Some(sk) = TEST_MASTER.get() { return Ok(SigningKey::from_bytes(sk).verifying_key()); }
     let bytes = data_encoding::HEXLOWER.decode(MASTER_PUB_HEX.trim().as_bytes()).map_err(|_| "Khóa gốc trong bộ cài bị hỏng".to_string())?;
     let arr: [u8; 32] = bytes.try_into().map_err(|_| "Khóa gốc sai độ dài".to_string())?;
     VerifyingKey::from_bytes(&arr).map_err(|_| "Khóa gốc không hợp lệ".to_string())
@@ -129,6 +135,12 @@ pub fn verify(key: &str) -> Result<(KeyInfo, Option<[u8; 32]>), String> {
             Ok((KeyInfo { role: role.code(), exp: days_to_date(exp), machine: fmt_machine(&m), serial, director, can_issue: false }, None))
         }
     }
+}
+
+/// Khóa công khai của Giám đốc (khóa con trong chứng nhận), lấy từ bất kỳ key nào do Giám đốc đó cấp.
+pub fn director_pub(key: &str) -> Result<VerifyingKey, String> {
+    let (_, b) = parse_key(key)?;
+    Ok(read_cert(&b)?.sub_pub)
 }
 
 /// Nhà cung cấp tạo key Giám đốc bằng khóa ký gốc.

@@ -1,13 +1,13 @@
 // Trạng thái, tính toán nghiệp vụ, phân quyền và lưu dữ liệu.
 import { invoke } from '@tauri-apps/api/core';
 
-export const COLLS = ['duAnList','nhaThau','danhBa','goiThau','nghiemThu','thanhToan','thuVien','congViec','deXuat','bienBanMau','keys','revoked','hop','caiDat','banGiao'];
+export const COLLS = ['duAnList','nhaThau','danhBa','goiThau','nghiemThu','thanhToan','thuVien','congViec','deXuat','bienBanMau','keys','revoked','hop','caiDat','banGiao','phieu','taiLieu'];
 
 export const S = {
   view: 'tongquan', duAn: null, gtSel: null, tab: 'congviec', daTab: 'tiendo', vf: 'mo', pf: 'all', bbNhom: 'all',
   lic: null, info: null, kv: {}, snoozed: [],
   rp: { loai: 'tiendo', ct: 'tonghop', loc: 'all', cols: { nguoi: 1, goc: 1, hh: 1, xong: 1, tt: 1, lech: 1, ghichu: 0 }, fmt: 'xlsx', sel: [], tu: '', den: '', ky: true, sheet: true },
-  nh: null, imp: null,
+  nh: null, imp: null, share: null,
 };
 COLLS.forEach(c => S[c] = []);
 
@@ -97,16 +97,47 @@ export const followed = daId => (S.kv.follow || []).includes(daId);
 /** can(k[, daId]): theo vai trò; dự án đang "Chỉ theo dõi" thì không sửa được. */
 export function can(k, daId) {
   const role = S.lic?.role; if (!role) return false;
+  if (S.share?.joined && role !== 'GD') return canTeam(k, daId, role);
   const ok = !!(PERM[k] || [1, 1, 1])[{ GD: 0, TN: 1, NV: 2 }[role]];
   if (ok && daId && followed(daId) && !READ_KEYS.has(k)) return false;
   return ok;
 }
 
+/* ---------- quyền khi làm việc nhóm (theo bảng quyền Giám đốc gửi về, giống phần kiểm tra ở máy Giám đốc) ---------- */
+const KEY_GROUP = { taoDA: 'cv', suaDA: 'cv', dongDA: 'cv', suaGT: 'cv', nhaThau: 'cv', themCV: 'cv', thuVien: 'cv', xoaDA: 'xoa', xoaGT: 'xoa',
+  done: 'tiendo', ghiChu: 'tiendo', dcHan: 'han', ghiTC: 'tc', suaTC: 'tc', baoHanh: 'tc', lapQT: 'tc', chotQT: 'tc', bcTC: 'tc', qlMau: 'mau', caiDat: 'caidat', taiLieu: 'tl' };
+const GD_ONLY = new Set(['key', 'nhatKy', 'chonBan', 'nhapGop', 'saoLuu', 'quyen', 'duyet']);
+/** Mức quyền với một nhóm dữ liệu: n sửa ngay, d gửi duyệt, x chỉ xem, h ẩn. */
+export function modeOf(group, daId, gtId) {
+  const role = S.lic?.role; const t = S.share?.team;
+  if (role === 'GD' || !S.share?.joined || !t) return 'n';
+  const R = t.rights || {}; const date = today(); const me = S.lic.serial; const now = Date.now();
+  let best = null;
+  for (const g of R.grants || []) {
+    if (g.on === false || !(g.data === group || g.data === 'all')) continue;
+    if (g.from && g.from > date) continue; if (g.to && g.to < date) continue;
+    const who = g.who === me ? 2 : g.who === role ? 0 : -1; if (who < 0) continue;
+    const sco = !g.scope || g.scope === 'all' ? 0 : (daId && g.scope === daId) ? 1 : -1; if (sco < 0) continue;
+    if (!best || who + sco >= best[0]) best = [who + sco, (g.lv || 'x')[0]];
+  }
+  const m = best ? best[1] : ((R.rules || {})[group] || {})[role]?.[0] || 'x';
+  const locked = (R.locks || []).some(l => now >= l.at && l.scope && (l.scope === daId || l.scope === gtId));
+  return locked && m !== 'h' ? 'x' : m;
+}
+function canTeam(k, daId, role) {
+  if (GD_ONLY.has(k)) return false;
+  if (k === 'xemTC') return modeOf('tc', daId) !== 'h';
+  const g = KEY_GROUP[k]; if (!g) return true;
+  return 'nd'.includes(modeOf(g, daId));
+}
+/** Thao tác này sẽ thành đề xuất chờ Giám đốc duyệt? (để ghi chú trên nút) */
+export const needsApproval = (k, daId) => S.share?.joined && S.lic?.role !== 'GD' && KEY_GROUP[k] && modeOf(KEY_GROUP[k], daId) === 'd';
+
 /* ---------- lưu dữ liệu: so sánh với ảnh chụp, chỉ gửi bản ghi thay đổi ---------- */
 let snap = {};
 const label = r => r.ten || r.ma || r.lyDo || r.ct || r.id;
 export function snapshot() { snap = {}; COLLS.forEach(c => { snap[c] = new Map(S[c].map(r => [r.id, JSON.stringify(r)])); }); }
-export async function flush() {
+export async function flush(opts = {}) {
   const changes = [];
   COLLS.forEach(c => {
     const old = snap[c] || new Map(); const seen = new Set();
@@ -114,13 +145,25 @@ export async function flush() {
     old.forEach((j, id) => { if (!seen.has(id)) { let l = id; try { l = label(JSON.parse(j)); } catch { } changes.push({ coll: c, id, data: null, label: String(l).slice(0, 120) }); } });
   });
   if (!changes.length) return 0;
-  try { await api('db_apply', { changes }); snapshot(); return changes.length; }
-  catch (e) { console.error(e); window.dispatchEvent(new CustomEvent('sda-error', { detail: String(e) })); return 0; }
+  try {
+    const r = await api('db_apply', { changes, system: !!opts.system });
+    if (r && (r.proposed || (r.denied || []).length)) {
+      // Phần cần duyệt hoặc bị từ chối chưa vào dữ liệu: lấy lại dữ liệu thật để màn hình đúng.
+      await load();
+      const msg = [r.proposed ? `Đã gửi ${r.proposed} thay đổi cho Giám đốc duyệt` : '', (r.denied || []).length ? `Không có quyền sửa: ${r.denied.slice(0, 3).join(', ')}` : ''].filter(Boolean).join('. ');
+      window.dispatchEvent(new CustomEvent('sda-proposed', { detail: msg }));
+      return r.direct || 0;
+    }
+    snapshot(); if (r && r.direct) window.dispatchEvent(new Event('sda-kick')); return changes.length;
+  }
+  catch (e) { console.error(e); window.dispatchEvent(new CustomEvent('sda-error', { detail: String(e) })); await load().catch(() => {}); return 0; }
 }
 export async function load() {
   const r = await api('db_load');
   COLLS.forEach(c => S[c] = r.colls[c] || []);
   S.kv = r.kv || {};
+  S.share = r.share || null;
+  if (S.lic && S.share?.role && S.lic.role !== S.share.role) S.lic.role = S.share.role;
   S.nh = Object.assign(structuredClone(DEFAULT_NH), S.kv.nh || {});
   if (S.kv.rp) Object.assign(S.rp, S.kv.rp);
   snapshot();

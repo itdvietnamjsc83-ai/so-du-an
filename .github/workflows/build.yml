@@ -2,7 +2,8 @@ name: Build bộ cài
 
 on:
   push:
-    branches: [main]
+    # Nhánh claude/**: bản thử (pre-release) để kiểm tra trước khi đưa vào main.
+    branches: [main, 'claude/**']
     tags: ['v*']
     paths-ignore: ['mobile/**', 'capacitor.config.json', '.github/workflows/mobile.yml']
   pull_request:
@@ -60,6 +61,7 @@ jobs:
           releaseName: 'Sổ Dự Án v__VERSION__'
           releaseBody: 'Windows: tải tệp .exe. macOS: tải tệp .dmg.'
           releaseDraft: false
+          prerelease: ${{ github.ref != 'refs/heads/main' }}
       - uses: actions/upload-artifact@v4
         with:
           name: SoDuAn-${{ matrix.name }}

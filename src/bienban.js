@@ -91,7 +91,7 @@ export async function seedBuiltins() {
     const file = await store(bytes, ten + '.docx');
     S.bienBanMau.push({ id, nhom, ten, mt, file, ver: 1, ngay: today(), ls: [], builtin: true, rieng: classify(scanTags(bytes)).rieng });
   }
-  await flush(); await kvSet('bbSeeded', true);
+  await flush({ system: true }); await kvSet('bbSeeded', true);
 }
 
 /* ---------- dữ liệu điền vào mẫu ---------- */

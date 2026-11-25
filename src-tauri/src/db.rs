@@ -103,8 +103,10 @@ pub fn kv_set(c: &Connection, k: &str, v: &str) -> rusqlite::Result<()> {
     c.execute("INSERT INTO kv(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value", params![k, v])?;
     Ok(())
 }
+/// Khóa nội bộ của phần đồng bộ: giao diện không được đọc/ghi.
+pub const KV_INTERNAL: &[&str] = &["dev", "ring", "hlc", "pushed", "pkseq", "docs_map", "share", "removed", "data_dir", "team_seen_at", "need_files", "last_pull", "last_push", "seen"];
 pub fn kv_all(c: &Connection) -> rusqlite::Result<Value> {
-    let mut st = c.prepare("SELECT key,value FROM kv WHERE key NOT LIKE 'license%'")?;
+    let mut st = c.prepare("SELECT key,value FROM kv WHERE key NOT LIKE 'license%' AND key NOT IN ('dev','ring','hlc','pushed','pkseq','docs_map')")?;
     let mut m = Map::new();
     for r in st.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))? {
         let (k, v) = r?;

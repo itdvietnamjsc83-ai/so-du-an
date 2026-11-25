@@ -6,6 +6,8 @@ import { nhAlerts, NSU, NKENH } from './notify.js';
 import { rpScope, rpPreview, RPCOLS } from './report.js';
 
 export const V = {}, T = {};
+/** Móc cho phần làm việc nhóm (team.js gắn vào, tránh vòng lặp import). */
+export const HOOK = { nav: () => [], foot: () => '', banner: () => '' };
 
 /* ---------- mảnh giao diện dùng lại ---------- */
 export function hanPill(c) {
@@ -45,6 +47,8 @@ export function renderSide() {
     ['nhathau', 'build', 'Nhà thầu & đơn vị', true, 0, 'Danh mục'],
     ['bienban', 'doc', 'Biên bản mẫu', true, 0, 'Danh mục'],
     ['thuvien', 'book', 'Thư viện công việc', true, 0, 'Danh mục'],
+    ['tailieu', 'folder', 'Tài liệu & AI quét', true, 0, 'Danh mục'],
+    ...HOOK.nav(),
     ['nhacviec', 'bell', 'Nhắc việc & thông báo', true, 0, 'Dữ liệu'],
     ['dongbo', 'sync', 'Chia sẻ & đồng bộ', true, 0, 'Dữ liệu'],
     ['keys', 'key', 'Quản lý key', can('key'), 0, 'Dữ liệu'],
@@ -55,10 +59,10 @@ export function renderSide() {
   $('#side').innerHTML = `<div class="brand"><div class="brand-mark">S</div><div><b>Sổ Dự Án</b><small>${esc(donVi().ten || 'Bản offline')}</small></div></div>` +
     items.filter(i => i[3]).map(i => { const lab = i[5] !== grp ? `<div class="nav-label">${i[5]}</div>` : ''; grp = i[5];
       return lab + `<button class="nav ${navOn(i[0]) ? 'on' : ''}" data-go="${i[0]}">${ic(i[1])}<span>${i[2]}</span>${i[4] ? `<span class="badge">${i[4]}</span>` : ''}</button>`; }).join('') +
-    `<div class="side-foot"><span class="dot"></span>${last ? 'Chia sẻ gần nhất: ' + d(last.slice(0, 10)) : 'Chưa chia sẻ lần nào'}<br><span style="opacity:.7">Phiên bản ${esc(S.info?.version || '')}</span></div>`;
+    `<div class="side-foot"><span class="dot"></span>${HOOK.foot() || (last ? 'Chia sẻ gần nhất: ' + d(last.slice(0, 10)) : 'Chưa chia sẻ lần nào')}<br><span style="opacity:.7">Phiên bản ${esc(S.info?.version || '')}</span></div>`;
 }
 const navOn = k => S.view === k || (k === 'duan' && (S.view === 'duandetail' || S.view === 'goithau'));
-const NAMES = { tongquan: 'Tổng quan', duan: 'Dự án', viec: 'Việc cần làm', taichinh: 'Tài chính', nhathau: 'Nhà thầu & đơn vị', thuvien: 'Thư viện công việc', baocao: 'Báo cáo', nhacviec: 'Nhắc việc & thông báo', keys: 'Quản lý key', bienban: 'Biên bản mẫu', dongbo: 'Chia sẻ & đồng bộ', caidat: 'Cài đặt & nhật ký' };
+const NAMES = { tongquan: 'Tổng quan', duan: 'Dự án', viec: 'Việc cần làm', taichinh: 'Tài chính', nhathau: 'Nhà thầu & đơn vị', thuvien: 'Thư viện công việc', baocao: 'Báo cáo', nhacviec: 'Nhắc việc & thông báo', keys: 'Quản lý key', bienban: 'Biên bản mẫu', dongbo: 'Chia sẻ & đồng bộ', caidat: 'Cài đặt & nhật ký', tailieu: 'Tài liệu & AI quét', duyet: 'Duyệt thay đổi', quyen: 'Bảng quyền', nhatky: 'Nhật ký sửa', dexuatcuatoi: 'Đề xuất của tôi' };
 export function renderCrumbs() {
   const c = [];
   if (S.view === 'duandetail' || S.view === 'goithau') {
@@ -247,7 +251,7 @@ function timeline(gts, cvs) {
 V.goithau = () => {
   const g = gtById(S.gtSel); if (!g) { S.view = 'duan'; return V.duan(); }
   const t = tc(g.id);
-  const tabs = [['congviec', 'Công việc'], ['dexuat', 'Điều chỉnh tiến độ'], ['taichinh', 'Tài chính', can('xemTC')], ['baohanh', 'Bảo hành'], ['quyettoan', 'Quyết toán', can('xemTC')], ['bangiao', 'Bàn giao']].filter(x => x[2] !== false);
+  const tabs = [['congviec', 'Công việc'], ['dexuat', 'Điều chỉnh tiến độ'], ['taichinh', 'Tài chính', can('xemTC')], ['baohanh', 'Bảo hành'], ['quyettoan', 'Quyết toán', can('xemTC')], ['bangiao', 'Bàn giao'], ['tailieu', 'Tài liệu']].filter(x => x[2] !== false);
   if (!tabs.some(x => x[0] === S.tab)) S.tab = 'congviec';
   const n = ntById(g.nt);
   return `<div class="head"><div><h1>${esc(g.ma)} · ${esc(g.ten)}</h1><p class="sub">${esc(n.ten)}${g.hd ? ' · HĐ ' + esc(g.hd) : ''}${g.ngayKy ? ' ký ' + d(g.ngayKy) : ''}</p></div>
